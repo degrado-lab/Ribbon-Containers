@@ -1,0 +1,7 @@
+{
+    "name": "Universal_Apptainer",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    }
+}
