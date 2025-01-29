@@ -92,6 +92,7 @@ jobs:
           echo "Building Apptainer .sif from $IMAGE_NAME"
           # Example SIF filename includes container name & version
           SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
           apptainer build "$SIF_FILE" definition.def
 
       # Optional: push the .sif to DockerHub (using ORAS) or upload as artifact
