@@ -17,6 +17,7 @@ jobs:
     steps:
       - name: Remove unnecessary files
         run: |
+          df -h
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           
@@ -88,6 +89,7 @@ jobs:
           # Example SIF filename includes container name & version
           SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
           cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          df -h
           sudo apptainer build "$SIF_FILE" definition.def
 
       # Optional: push the .sif to DockerHub (using ORAS) or upload as artifact
