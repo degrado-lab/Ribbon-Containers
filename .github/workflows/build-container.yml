@@ -12,14 +12,9 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, GH-S476-1]
 
     steps:
-      - name: Remove unnecessary files
-        run: |
-          df -h
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
           
       - name: Check out code
         uses: actions/checkout@v3
