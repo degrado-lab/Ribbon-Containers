@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-and-push:
-    runs-on: [self-hosted, GH-S476-1]
+    runs-on: [self-hosted, GH-S476-1-docker]
 
     steps:
           
