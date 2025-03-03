@@ -1,0 +1,3 @@
+# Ignore Singularity image files
+*.simg
+*.sif

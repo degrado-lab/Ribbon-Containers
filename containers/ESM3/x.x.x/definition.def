@@ -1,0 +1,50 @@
+Bootstrap: docker
+From: nvidia/cuda:12.5.0-devel-ubuntu22.04
+
+%post
+        # Switch shell to bash
+        rm /bin/sh; ln -s /bin/bash /bin/sh
+
+        # Extract the model files into /models--EvolutionaryScale--esm3-sm-open-v1./
+        # At runtime, we'll make a symlink to the model in the expected directory.
+        tar -xvf models--EvolutionaryScale--esm3-sm-open-v1.tar.gz
+        rm models--EvolutionaryScale--esm3-sm-open-v1.tar.gz
+
+        # Install wget, git, build-essential, libc6-dev, python3-dev, and other required packages
+        apt-get update && apt-get install -y \
+            wget \
+        && apt-get clean
+        
+        # Installs into /usr
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+        bash Miniconda3-latest-Linux-x86_64.sh -b -u -p /usr
+        rm Miniconda3-latest-Linux-x86_64.sh
+        conda install python==3.11
+
+        # Install required python packages, plus some useful ones:
+        pip3 install huggingface_hub esm numpy scipy pandas
+
+%environment
+        export PATH=$PATH:/usr/bin:/usr/local/cuda/bin:/opt/conda/envs/env/bin
+        export PYTHONPATH=$PYTHONPATH:/opt/conda/envs/env/lib/python3.11/site-packages
+
+%runscript
+        # Print message about the non-commercial use license:
+        echo ""
+        echo "By using this software, you agree to the terms of the Community License Agreement at https://github.com/evolutionaryscale/esm/blob/main/LICENSE.md"
+        echo "This software is NOT for commercial use."
+        echo ""
+
+        # If the symlink doesn't already exist,
+        # Make a symbolic link to the model files in ~/.cache/huggingface/hub/models/
+        if [ ! -d ~/.cache/huggingface/hub/ ]; then
+            mkdir -p ~/.cache/huggingface/hub/
+        fi
+        ln -s /models--EvolutionaryScale--esm3-sm-open-v1 ~/.cache/huggingface/hub/models--EvolutionaryScale--esm3-sm-open-v1
+
+        #Run appropriate script
+        exec "$@"
+
+%files
+        # Copy the model files
+        models--EvolutionaryScale--esm3-sm-open-v1.tar.gz

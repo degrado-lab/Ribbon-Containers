@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: pegi3s/biopython
+
+%post
+    # Update the package manager and install any additional dependencies if needed
+    apt-get update && apt-get install -y \
+        wget \
+        git \
+        vim \
+        && apt-get clean
+
+%environment
+    # Set environment variables
+    export PATH="/opt/biopython/bin:$PATH"
+
+%runscript
+    # This is the default behavior when you run the Apptainer image
+    exec "$@"
+
+%test
+    # Test that Biopython is working properly
+    python3 -c "import Bio; print(Bio.__version__)"

@@ -1,16 +1,11 @@
 Bootstrap: docker
-From: nicholasfreitas/chai-1:docker-0.5.2
+From: nicholasfreitas/boltz-1:docker-0.4.1
 
 %post
     # Ensure conda is initialized in the environment
     /usr/condabin/conda init bash
 
 %runscript
-    # Create CHAI_DOWNLOADS_DIR, if needed
-    if [ ! -d "$CHAI_DOWNLOADS_DIR" ]; then
-        mkdir -p "$CHAI_DOWNLOADS_DIR"
-    fi
-
     # Run user command
     exec "$@"
 
@@ -19,13 +14,10 @@ From: nicholasfreitas/chai-1:docker-0.5.2
     export PATH="/usr/bin:/usr/condabin:/usr:$PATH"
     export NVIDIA_VISIBLE_DEVICES=all
     export NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    
-    # This specifies where some model information will be downloaded:
-    export CHAI_DOWNLOADS_DIR=~/.cache/chai-downloads/
 
 %labels
     Author "Nicholas Freitas"
-    Version "2.0"
+    Version "1.0"
 
 %help
-    This apptainer contains the Chai-1 model package, as of September 23rd, 2024.
+    This apptainer contains the Boltz-1 model package, as of Feb 25, 2025.

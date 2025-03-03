@@ -1,0 +1,2 @@
+bootstrap: docker
+from: rosettacommons/rosetta:serial-386

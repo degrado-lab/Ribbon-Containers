@@ -1,0 +1,20 @@
+bootstrap: docker
+from: nicholasfreitas/raptorx-single:docker-25.3.1
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    source activate RaptorX-Single
+
+%runscript
+
+    # Create symlinks
+    file=/opt/RaptorX-Single/
+    ln -s $file .
+
+    exec "$@"
+
+    # Remove symlinks
+    if [ -L "$file" ]; then
+        rm "$file"
+    fi
+    done

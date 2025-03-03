@@ -1,0 +1,47 @@
+Bootstrap: localimage
+From: rf_se3_diffusion.sif
+
+%post
+    # Update and install wget
+    apt-get update && apt-get install -y wget git
+
+    # Clone the package repository
+    git clone https://github.com/baker-laboratory/rf_diffusion_all_atom.git
+
+    # Download the model weights
+    #wget http://files.ipd.uw.edu/pub/RF-All-Atom/weights/RFDiffusionAA_paper_weights.pt
+
+    # Initialize and update git submodules
+    cd rf_diffusion_all_atom
+    git submodule init
+    git submodule update
+
+%help
+    This container is built based on rf_se3_diffusion.sif and includes the RF Diffusion All Atom package with model weights.
+
+%files
+    ./weights/RFDiffusionAA_paper_weights.pt /RFDiffusionAA_paper_weights.pt 
+
+%environment
+    # Set the environment for the conda in the container
+    # Taken directly from the rf_se3_diffusion container definition.
+    export PATH=$PATH:/usr/bin:/usr/local/cuda/bin:/opt/conda/envs/env/bin
+    export PYTHONPATH=$PYTHONPATH:/opt/conda/envs/env/lib/python3.9/site-packages
+
+
+%runscript
+    # Copy the RFDiffusion scripts to the current directory.
+    # This is necessary, rather than a symlink, because at runtime the the code writes files. A symlink would be read-only.
+    if [ ! -d "rf_diffusion_all_atom" ]; then
+       cp -r /rf_diffusion_all_atom/ . 
+    fi
+
+    # And to the model weights: 
+    ln -s /RFDiffusionAA_paper_weights.pt ./RFDiffusionAA_paper_weights.pt
+
+    # Run the appropriate script
+    exec "$@"
+
+    # Remove the symlink
+    rm -r ./rf_diffusion_all_atom/
+    rm RFDiffusionAA_paper_weights.pt
