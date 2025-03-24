@@ -11,7 +11,7 @@ on:
         required: true
 
 jobs:
-  build-and-push:
+  build-and-push-local:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +22,7 @@ jobs:
       - name: Log in to DockerHub
         if: always()
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
         run: |
@@ -36,7 +36,7 @@ jobs:
 
           echo "Building Docker image $IMAGE_NAME from containers/$CONTAINER_NAME/$CONTAINER_VERSION/Dockerfile"
           cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
-          # docker build -t "$IMAGE_NAME" .
+          docker build -t "$IMAGE_NAME" .
 
       - name: Push Docker image (versioned)
         run: |
@@ -47,7 +47,7 @@ jobs:
           IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
 
           echo "Pushing Docker image $IMAGE_NAME"
-          # docker push "$IMAGE_NAME"
+          docker push "$IMAGE_NAME"
 
       - name: Tag & push Docker image as 'latest'
         run: |
@@ -59,18 +59,17 @@ jobs:
           LATEST_IMAGE="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-latest"
 
           echo "Tagging $VERSIONED_IMAGE as $LATEST_IMAGE"
-          # docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
+          docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
 
           echo "Pushing 'latest' tag"
-          # docker push "$LATEST_IMAGE"
+          docker push "$LATEST_IMAGE"
 
       - name: Install Apptainer
         run: |
-          sudo add-apt-repository -y ppa:apptainer/ppa
-          sudo apt update
-          sudo apt-get install -y build-essential libseccomp-dev pkg-config squashfs-tools uidmap git wget \
-                                  libssl-dev uuid-dev libgpgme-dev golang-go libglib2.0-dev libz-dev fakeroot
-          sudo apt install -y apptainer-suid
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          echo $CONTAINER_NAME
+          echo $CONTAINER_VERSION
 
       - name: Build Apptainer SIF from Docker image
         run: |
@@ -84,18 +83,13 @@ jobs:
           # Example SIF filename includes container name & version
           SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
           cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
-          df -h
           ls -l
-          sudo apptainer build "$SIF_FILE" definition.def
+          apptainer build "$SIF_FILE" definition.def
 
       # Optional: push the .sif to DockerHub (using ORAS) or upload as artifact
       - name: Install ORAS
         run: |
-          sudo apt-get install -y oras || true
-          if ! command -v oras; then
-            echo "Fetching oras from GitHub releases..."
-            # e.g. fetch a binary from https://github.com/oras-project/oras/releases
-          fi
+          ls
 
       - name: Push SIF to DockerHub (versioned) with ORAS
         run: |
@@ -107,8 +101,7 @@ jobs:
           SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
 
           echo "Pushing $SIF_FILE to ORAS registry on DockerHub with tag '${CONTAINER_VERSION}'"
-          oras push docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:${CONTAINER_VERSION} \
-            $SIF_FILE
+          apptainer push $SIF_FILE oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:${CONTAINER_VERSION}
 
       - name: Push SIF to DockerHub (latest) with ORAS
         run: |
@@ -120,5 +113,4 @@ jobs:
           SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
           
           echo "Also pushing $SIF_FILE with tag 'latest'"
-          oras push docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:latest \
-            $SIF_FILE
+          apptainer push $SIF_FILE oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:latest

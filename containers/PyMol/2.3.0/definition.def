@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: pegi3s/pymol:2.3.0
+
+%environment
+    # Set the python path:
+    export PATH="/usr/local/bin:$PATH"
+
+%runscript
+    # This is the default behavior when you run the Apptainer image
+    exec "$@"
+
+%test
+    # Test that PyMol is working properly
+    python3 -c "import pymol"

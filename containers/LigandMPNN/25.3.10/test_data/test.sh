@@ -1,0 +1,1 @@
+apptainer run ligandmpnn_0.0.1.sif python LigandMPNN/run.py --out_folder ./out --pdb_path HG3.pdb

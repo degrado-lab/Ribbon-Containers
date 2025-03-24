@@ -1,0 +1,65 @@
+name: "Build Container"
+
+on:
+  workflow_dispatch:
+    inputs:
+      container-name:
+        description: "Name of container to build (subfolder under containers/)"
+        required: true
+      container-version:
+        description: "Version folder to build (e.g. 0.5.2)"
+        required: true
+
+jobs:
+  build-and-push-local-docker-only:
+    runs-on: ubuntu-latest
+
+    steps:
+          
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        if: always()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+
+          # We'll name the Docker image with container name + a 'docker-' prefix + version
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
+
+          echo "Building Docker image $IMAGE_NAME from containers/$CONTAINER_NAME/$CONTAINER_VERSION/Dockerfile"
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          docker build -t "$IMAGE_NAME" .
+
+      - name: Push Docker image (versioned)
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
+
+          echo "Pushing Docker image $IMAGE_NAME"
+          docker push "$IMAGE_NAME"
+
+      - name: Tag & push Docker image as 'latest'
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          
+          VERSIONED_IMAGE="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
+          LATEST_IMAGE="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-latest"
+
+          echo "Tagging $VERSIONED_IMAGE as $LATEST_IMAGE"
+          docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
+
+          echo "Pushing 'latest' tag"
+          docker push "$LATEST_IMAGE"

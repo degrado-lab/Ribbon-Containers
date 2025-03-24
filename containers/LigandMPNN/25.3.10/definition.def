@@ -1,0 +1,21 @@
+Bootstrap: docker
+From: nicholasfreitas/ligandmpnn:docker-25.3.10
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    source activate ligandmpnn_env
+
+%runscript
+
+    # Create symlinks
+    ln -s /workspace/LigandMPNN/ .
+    ln -s /workspace/LigandMPNN/model_params/ .
+
+    exec "$@"
+
+    # Remove symlinks
+    for file in ./LigandMPNN ./model_params; do
+        if [ -L "$file" ]; then
+            rm "$file"
+        fi
+    done

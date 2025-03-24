@@ -1,0 +1,73 @@
+name: "Build Container"
+
+on:
+  workflow_dispatch:
+    inputs:
+      container-name:
+        description: "Name of container to build (subfolder under containers/)"
+        required: true
+      container-version:
+        description: "Version folder to build (e.g. 0.5.2)"
+        required: true
+
+jobs:
+  build-and-push-local-app-only:
+    runs-on: ubuntu-latest
+
+    steps:
+          
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        if: always()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Install Apptainer
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          echo $CONTAINER_NAME
+          echo $CONTAINER_VERSION
+
+      - name: Build Apptainer SIF from Docker image
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:${CONTAINER_VERSION}"
+
+          echo "Building Apptainer .sif from $IMAGE_NAME"
+          # Example SIF filename includes container name & version
+          SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          apptainer build "$SIF_FILE" definition.def
+
+      - name: Push SIF to DockerHub (versioned) with ORAS
+        run: |
+          oras login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}" docker.io
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          
+          SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+
+          echo "Pushing $SIF_FILE to ORAS registry on DockerHub with tag '${CONTAINER_VERSION}'"
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          apptainer push $SIF_FILE oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:${CONTAINER_VERSION}
+          # oras push docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:${CONTAINER_VERSION} "$SIF_FILE:application/vnd.apptainer.image.sif"
+
+      - name: Push SIF to DockerHub (latest) with ORAS
+        run: |
+          oras login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}" docker.io
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          
+          SIF_FILE="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+          
+          echo "Also pushing $SIF_FILE with tag 'latest'"
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          apptainer push  $SIF_FILE oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:latest
