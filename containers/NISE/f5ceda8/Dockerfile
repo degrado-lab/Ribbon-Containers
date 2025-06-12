@@ -79,10 +79,14 @@ COPY --from=build /opt /opt
 
 # download Boltz cache
 RUN mkdir -p /boltz_cache
-RUN curl -fSL https://huggingface.co/boltz-community/boltz-1/resolve/main/ccd.pkl \
+RUN curl -fSL https://huggingface.co/boltz-community/boltz-2/resolve/main/boltz2_aff.ckpt \
       -o /boltz_cache/ccd.pkl \
     && curl -fSL https://huggingface.co/boltz-community/boltz-1/resolve/main/boltz1_conf.ckpt \
-      -o /boltz_cache/boltz1_conf.ckpt
+      -o /boltz_cache/boltz1_conf.ckpt \
+    && curl -fSL https://huggingface.co/boltz-community/boltz-2/resolve/main/mols.tar \
+      -o /boltz_cache/mols.tar \
+    && tar -xvf /boltz_cache/mols.tar \
+    && rm /boltz_cache/mols.tar
 ENV BOLTZ_CACHE=/boltz_cache
 
 # strip pip/conda caches that snuck in
