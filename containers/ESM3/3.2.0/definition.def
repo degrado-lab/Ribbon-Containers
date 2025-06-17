@@ -1,0 +1,41 @@
+Bootstrap: docker
+From: nicholasfreitas/esm3:docker-3.2.0
+
+%labels
+    Maintainer Nicholas Freitas
+    Description ESM3. No weights are installed.
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    # Using User-default home instead of this.
+    # We set the HF_HOME back to the default location:
+    #export HF_HOME=~/.cache/huggingface
+
+    # -------- activate env for all interactive shells --------
+    # `/etc/profile.d/mamba.sh` was created in the Docker image
+    # so bash --login will source it automatically.
+    # For non-login `apptainer shell` sessions we source it ourselves.
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    # No weights in the container, we'll just use the user-default HF_HOME
+    # If $HF_HOME/hub/models--EvolutionaryScale--esm3-sm-open-v1.tar doesn't exist, make a symlink:
+    # if [ ! -f "$HF_HOME/hub/models--EvolutionaryScale--esm3-sm-open-v1" ]; then
+    #     ln -s /app/huggingface/hub/models--EvolutionaryScale--esm3-sm-open-v1 "$HF_HOME/hub/models--EvolutionaryScale--esm3-sm-open-v1"
+    # fi
+
+    if [ $# -eq 0 ]; then
+        bash --login -i    # loads /etc/profile.d/mamba.sh → (app) prompt
+    else
+        # Run user command inside the env without needing activation
+        micromamba run -n app "$@"
+    fi

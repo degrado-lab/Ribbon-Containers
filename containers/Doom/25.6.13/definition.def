@@ -1,0 +1,27 @@
+Bootstrap: docker
+From: nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba
+
+%labels
+    Maintainer Nicholas Freitas
+    Description Doom!
+
+%files
+    # -------- Copy DOOM.WAD and doom_ascii binary --------
+    DOOM1.WAD /app/doom/DOOM1.WAD
+    doom_ascii /app/doom/doom_ascii
+
+%post
+    # -------- Run permissions for binary --------
+    chmod +x /app/doom/doom_ascii
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    if [ $# -eq 0 ]; then
+        /app/doom/doom_ascii -iwad /app/doom/DOOM1.WAD
+    else
+        # Run user command inside the env without needing activation
+        exec "$@"
+    fi

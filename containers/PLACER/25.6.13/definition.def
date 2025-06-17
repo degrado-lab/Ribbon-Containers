@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: nicholasfreitas/placer:docker-25.6.15
+
+%labels
+    Maintainer Nicholas Freitas
+    Description PLACER
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    # -------- activate env for all interactive shells --------
+    # `/etc/profile.d/mamba.sh` was created in the Docker image
+    # so bash --login will source it automatically.
+    # For non-login `apptainer shell` sessions we source it ourselves.
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    if [ $# -eq 0 ]; then
+        bash --login -i    
+    else
+        # Run user command inside the env without needing activation
+        micromamba run -n app "$@"
+    fi

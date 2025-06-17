@@ -11,3 +11,5 @@ To update a container (for instance, for a new software release), create a new d
 - The container version number should match the given software number. If you need to make more container releases between software updates, an additional number can be appended.
 - If the software does not have a version number, the version number should be the ~date~ of the container release in Y.M.D format (e.g. 25.3.1).
 
+## Templates
+Dockerfile and definition.def templates are in the `templates` folder.

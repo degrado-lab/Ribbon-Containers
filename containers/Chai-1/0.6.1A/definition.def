@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: nicholasfreitas/chai-1:docker-0.6.1A
+
+%labels
+    Maintainer Nicholas Freitas
+    Description Chai-1 with Chai-1 weights and model params.
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    export NVIDIA_VISIBLE_DEVICES=all
+    export NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    
+    # This specifies where some model information will be downloaded:
+    export CHAI_DOWNLOADS_DIR=/app/.cache/chai-downloads/
+    
+    # -------- activate env for all interactive shells --------
+    # `/etc/profile.d/mamba.sh` was created in the Docker image
+    # so bash --login will source it automatically.
+    # For non-login `apptainer shell` sessions we source it ourselves.
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    if [ $# -eq 0 ]; then
+        bash --login -i    # loads /etc/profile.d/mamba.sh → (app) prompt
+    else
+        # Run user command inside the env without needing activation
+        micromamba run -n app "$@"
+    fi

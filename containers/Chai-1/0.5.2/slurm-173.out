@@ -1,0 +1,68 @@
+INFO:    Starting build...
+Copying blob sha256:9a9dd462fc4c5ca1dd29994385be60a5bb359843fc93447331b8c97dfec99bf9
+Copying blob sha256:8054e9d6e8d6718cc3461aa4172ad048564cdf9f552c8f9820bd127859aa007c
+Copying blob sha256:9fe5ccccae45d6811769206667e494085cb511666be47b8e659087c249083c3f
+Copying blob sha256:aece8493d3972efa43bfd4ee3cdba659c0f787f8f59c82fb3e48c87cbb22a12e
+Copying blob sha256:95eef45e00fabd2bce97586bfe26be456b0e4b3ef3d88d07a8b334ee05cc603c
+Copying blob sha256:aa750c79a4cc745750c40a37cad738f9bcea14abb96b0c5a811a9b53f185b9c9
+Copying blob sha256:bdddd5cb92f6b4613055bcbcd3226df9821c7facd5af9a998ba12dae080ef134
+Copying blob sha256:e2554c2d377e1176c0b8687b17aa7cbe2c48746857acc11686281a4adee35a0a
+Copying blob sha256:4640d022dbb8eb47da53ccc2de59f8f5e780ea046289ba3cffdf0a5bd8d19810
+Copying blob sha256:5324914b447286e0e6512290373af079a25f94499a379e642774245376e60885
+Copying blob sha256:109d8ad449e0c09a481c9df022da76dbf3ccadcd0ff2dae4ea3f36d6e7230d3d
+Copying blob sha256:cec80e026d35ebaefa33b655af8e58f4e138b1691f03b9b3013973a438ebcff6
+Copying blob sha256:36fc46cb5b63d08c9d5bd093b66ab21f2dafef3584ae513ce9696462ef3a4cd4
+Copying blob sha256:9af4f3ecc0eaa3b566184ef89039baa3795ed3ef283395dfc1ddf3b91f4da6af
+Copying blob sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+Copying blob sha256:3418deb0a9ae3a58284387a6589ae42a4c0ab6e4e188cc6ee263ab2fbe95608a
+Copying blob sha256:6aaa05ce8059da760a74d89959c730f6f39850e5b05368839738c46201e79671
+Copying blob sha256:8059b08ac72ecf178f227ac6a4cf6828743cd08861655695d060b088f5556e69
+Copying blob sha256:8971f97b28e9de935a35aaf76ce17911f6b98040c777342e0f6b74aedf9d3d24
+Copying blob sha256:8f12004ab282d1a83190cbaf1cbd3756babc08769ea55eec4c7b3dc047200edb
+Copying blob sha256:9e2de25be969afa4e73937f8283a1100f4d964fc0876c2f2184fda25ad23eeda
+Copying config sha256:edf2b3070b378cb869b5d18a92e970f67618a37c6e09aec3f13fdfd0e48474da
+Writing manifest to image destination
+2025/03/07 11:54:20  info unpack layer: sha256:aece8493d3972efa43bfd4ee3cdba659c0f787f8f59c82fb3e48c87cbb22a12e
+2025/03/07 11:54:21  info unpack layer: sha256:9fe5ccccae45d6811769206667e494085cb511666be47b8e659087c249083c3f
+2025/03/07 11:54:21  info unpack layer: sha256:8054e9d6e8d6718cc3461aa4172ad048564cdf9f552c8f9820bd127859aa007c
+2025/03/07 11:54:23  info unpack layer: sha256:bdddd5cb92f6b4613055bcbcd3226df9821c7facd5af9a998ba12dae080ef134
+2025/03/07 11:54:23  info unpack layer: sha256:5324914b447286e0e6512290373af079a25f94499a379e642774245376e60885
+2025/03/07 11:54:23  info unpack layer: sha256:9a9dd462fc4c5ca1dd29994385be60a5bb359843fc93447331b8c97dfec99bf9
+2025/03/07 11:54:53  info unpack layer: sha256:95eef45e00fabd2bce97586bfe26be456b0e4b3ef3d88d07a8b334ee05cc603c
+2025/03/07 11:54:53  info unpack layer: sha256:e2554c2d377e1176c0b8687b17aa7cbe2c48746857acc11686281a4adee35a0a
+2025/03/07 11:54:53  info unpack layer: sha256:4640d022dbb8eb47da53ccc2de59f8f5e780ea046289ba3cffdf0a5bd8d19810
+2025/03/07 11:54:53  info unpack layer: sha256:aa750c79a4cc745750c40a37cad738f9bcea14abb96b0c5a811a9b53f185b9c9
+2025/03/07 11:55:39  info unpack layer: sha256:9e2de25be969afa4e73937f8283a1100f4d964fc0876c2f2184fda25ad23eeda
+2025/03/07 11:55:39  info unpack layer: sha256:109d8ad449e0c09a481c9df022da76dbf3ccadcd0ff2dae4ea3f36d6e7230d3d
+2025/03/07 11:55:39  info unpack layer: sha256:3418deb0a9ae3a58284387a6589ae42a4c0ab6e4e188cc6ee263ab2fbe95608a
+2025/03/07 11:55:39  info unpack layer: sha256:cec80e026d35ebaefa33b655af8e58f4e138b1691f03b9b3013973a438ebcff6
+2025/03/07 11:55:51  info unpack layer: sha256:8f12004ab282d1a83190cbaf1cbd3756babc08769ea55eec4c7b3dc047200edb
+2025/03/07 11:55:56  info unpack layer: sha256:36fc46cb5b63d08c9d5bd093b66ab21f2dafef3584ae513ce9696462ef3a4cd4
+2025/03/07 11:55:56  info unpack layer: sha256:9af4f3ecc0eaa3b566184ef89039baa3795ed3ef283395dfc1ddf3b91f4da6af
+2025/03/07 11:55:57  info unpack layer: sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1
+2025/03/07 11:55:57  info unpack layer: sha256:6aaa05ce8059da760a74d89959c730f6f39850e5b05368839738c46201e79671
+2025/03/07 11:55:57  info unpack layer: sha256:8059b08ac72ecf178f227ac6a4cf6828743cd08861655695d060b088f5556e69
+2025/03/07 11:57:29  info unpack layer: sha256:8971f97b28e9de935a35aaf76ce17911f6b98040c777342e0f6b74aedf9d3d24
+INFO:    Running post scriptlet
++ /usr/condabin/conda init bash
+no change     /usr/condabin/conda
+no change     /usr/bin/conda
+no change     /usr/bin/conda-env
+no change     /usr/bin/activate
+no change     /usr/bin/deactivate
+no change     /usr/etc/profile.d/conda.sh
+no change     /usr/etc/fish/conf.d/conda.fish
+no change     /usr/shell/condabin/Conda.psm1
+no change     /usr/shell/condabin/conda-hook.ps1
+no change     /usr/lib/python3.11/site-packages/xontrib/conda.xsh
+no change     /usr/etc/profile.d/conda.csh
+modified      /root/.bashrc
+
+==> For changes to take effect, close and re-open your current shell. <==
+
+INFO:    Adding help info
+INFO:    Adding labels
+INFO:    Adding environment to container
+INFO:    Adding runscript
+INFO:    Creating SIF file...
+INFO:    Build complete: chai.sif

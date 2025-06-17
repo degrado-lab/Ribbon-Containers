@@ -1,0 +1,44 @@
+Bootstrap: docker
+From: nicholasfreitas/omegafold:docker-1.1.0.1
+
+%labels
+    Maintainer Nicholas Freitas
+    Description OmegaFold with model weights.
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    # -------- activate env for all interactive shells --------
+    # `/etc/profile.d/mamba.sh` was created in the Docker image
+    # so bash --login will source it automatically.
+    # For non-login `apptainer shell` sessions we source it ourselves.
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    # If the simlink already exists, delete it:
+    if [ -L $HOME/.cache/omegafold_ckpt/model.pt ]; then
+        rm $HOME/.cache/omegafold_ckpt/model.pt
+    fi
+    
+    # If the model weights directory doesn't exist, create it:
+    if [ ! -d $HOME/.cache/omegafold_ckpt ]; then
+        mkdir -p $HOME/.cache/omegafold_ckpt
+    fi
+
+    # Create simlink to model weights at $HOME/.cache/omegafold/
+    ln -s /app/model.pt $HOME/.cache/omegafold_ckpt/model.pt
+
+    if [ $# -eq 0 ]; then
+        bash --login -i    
+    else
+        # Run user command inside the env without needing activation
+        micromamba run -n app "$@"
+    fi

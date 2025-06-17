@@ -1,0 +1,16 @@
+Bootstrap: docker
+From: nicholasfreitas/placer:docker-25.3.3
+
+%environment
+    export PATH=/opt/conda/bin:$PATH
+    
+    # OR maybe:
+    #source /usr/etc/profile.d/conda.sh
+    #conda activate placer_env
+
+%runscript
+    #!/bin/bash
+
+    #source /usr/etc/profile.d/conda.sh
+    source activate /usr/envs/placer_env
+    exec "$@"
