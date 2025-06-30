@@ -1,3 +1,7 @@
 # Ignore Singularity image files
 *.simg
 *.sif
+
+# Ignore test files and build outputs
+/test*
+*.out
