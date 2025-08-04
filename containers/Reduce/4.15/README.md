@@ -4,7 +4,7 @@ Implementation of https://github.com/AndersJing/RaptorX-Single
 
 ### Usage
 - Docker: ``` ```
-- Apptainer: ``` ```
+- Apptainer: ```apptainer run --nv reduce_latest.sif reduce -build input.pdb > output.pdb```
 
 
 
