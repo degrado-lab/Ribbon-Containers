@@ -1,0 +1,16 @@
+Bootstrap: docker-archive
+From: nise.tar
+
+%environment
+    export MAMBA_ROOT_PREFIX=/usr/micromamba
+    export TMPDIR=/tmp
+    export MAMBA_TMPDIR=/tmp
+
+%runscript
+    #!/bin/bash
+    set -e
+
+    # Execute the user‑supplied command inside the lasermpnn env
+    cd /opt/NISE
+    exec micromamba run -n lasermpnn -- python run_nise_boltz.py "$@"
+
