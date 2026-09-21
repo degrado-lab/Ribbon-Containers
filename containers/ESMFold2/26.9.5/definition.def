@@ -1,0 +1,66 @@
+Bootstrap: docker
+From: nicholasfreitas/esmfold2:docker-26.9.5
+
+%labels
+    Maintainer Nicholas Freitas
+    Description ESMFold2 and ESMFold2-Fast with all weights baked in (stored bf16).
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    # -------- weights are local and complete --------
+    export ESMFOLD2_MODELS=/app/models
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    # load_ccd() ignores ESMFOLD2_MODELS and reaches for the Hub without this.
+    # Spelling is ESMCFOLD, not ESMFOLD2.
+    export ESMCFOLD_CCD_PATH=/app/models/ESMFold2/ccd.pkl
+    export PYTHONPATH=/app
+
+    # -------- keep every cache off the read-only image --------
+    # Torch/Triton/HF all want a writable cache. The image is read-only under
+    # Apptainer, so they are pointed at /tmp, which Apptainer mounts writable
+    # even under --containall.
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+
+    # -------- activate env for all interactive shells --------
+    # `/etc/profile.d/mamba.sh` was created in the Docker image
+    # so bash --login will source it automatically.
+    # For non-login `apptainer shell` sessions we source it ourselves.
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # -------- ensure every apptainer run ... uses the env --------
+    # If the user gave no command, start an interactive shell.
+
+    if [ $# -eq 0 ]; then
+        bash --login -i    # loads /etc/profile.d/mamba.sh → (app) prompt
+    else
+        # Run user command inside the env without needing activation
+        micromamba run -n app "$@"
+    fi
+
+%test
+    # Weights present and pointed at the in-image copy, no GPU needed.
+    /opt/conda/envs/app/bin/python -c "
+import json, os
+m = json.load(open('/app/models/WEIGHTS.json'))['models']
+assert set(m) == {'ESMC-6B', 'ESMFold2', 'ESMFold2-Fast'}, sorted(m)
+for k in ('ESMFold2', 'ESMFold2-Fast'):
+    assert m[k]['esmc_id'] == '/app/models/ESMC-6B', (k, m[k]['esmc_id'])
+assert os.path.exists('/app/models/ESMFold2/ccd.pkl')
+# load_ccd() reads this at import time; if it is unset or dangling the
+# container silently reaches for the Hub and is not stand-alone.
+ccd = os.environ.get('ESMCFOLD_CCD_PATH', '')
+assert ccd and os.path.exists(ccd), ('ESMCFOLD_CCD_PATH', ccd)
+print('weights OK', {k: round(v['stored_bytes']/1e9, 2) for k, v in m.items()})
+"

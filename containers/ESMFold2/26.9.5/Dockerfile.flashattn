@@ -1,0 +1,7 @@
+# Adds prebuilt flash-attn on top of the 26.9.5 image. No prior layer rebuilds.
+# Wheel is keyed to torch 2.7.1+cu126 / cxx11abiTRUE / cp312 - the image's exact combo.
+FROM nicholasfreitas/esmfold2:docker-26.9.5
+ARG FA_WHEEL
+RUN /opt/conda/envs/app/bin/pip install --no-cache-dir --no-deps --only-binary :all: "${FA_WHEEL}" \
+ && /opt/conda/envs/app/bin/pip show flash-attn | head -3
+LABEL esmfold2.flash_attn="2.8.3.post1+cu12torch2.7cxx11abiTRUE"

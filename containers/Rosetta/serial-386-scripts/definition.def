@@ -1,0 +1,8 @@
+bootstrap: docker
+from: rosettacommons/rosetta:serial-386
+
+%files
+    Rosetta-Scripts /opt/rosetta/scripts
+
+%environment
+    export ROSETTA_SCRIPTS=/opt/rosetta/scripts
