@@ -1,0 +1,103 @@
+{
+ "container": {
+  "docker_tag": "nicholasfreitas/esmfold2:docker-26.9.5",
+  "docker_image_id": "e3befd4564ff",
+  "docker_size": "21.3 GB",
+  "sif": "esmfold2_26.9.5.sif",
+  "sif_bytes": 14596096000,
+  "sif_sha256": "b84a1fa61ce6ae2b15f8bca1e74fbd436917d7d18ffd157faaef79a8a445beda",
+  "apptainer_version": "1.4.3",
+  "built_from": "docker-daemon (local image; the shipped definition.def uses Bootstrap: docker, which resolves once the tag is pushed)",
+  "build_date": "Saturday_5_September_2026_15:59:38_PDT"
+ },
+ "build_wall_s": {
+  "docker_rebuild_cached_builder": 333,
+  "sif": 2008,
+  "note": "docker wall is a rebuild with the builder stage cached; the cold build including the weight bake was substantially longer"
+ },
+ "host": {
+  "gpu": "NVIDIA GeForce RTX 4080",
+  "vram_mib": 16376,
+  "driver": "535.309.01",
+  "scheduler": "SLURM, gpu via --gres=gpu:1"
+ },
+ "isolation": {
+  "flags": "apptainer run --nv --containall --net --network=none",
+  "meaning": "no host $HOME, no host /tmp, no host HF cache, no route to the Hub \u2014 a fold can only succeed on baked weights"
+ },
+ "settings": {
+  "checkpoint": "ESMFold2 (full trunk)",
+  "dtype": "bfloat16 + autocast",
+  "kernel_backend": "fused",
+  "chunk_size": null,
+  "num_diffusion_samples": 5,
+  "warmup": true
+ },
+ "targets": {
+  "1ubq": {
+   "description": "Ubiquitin, 76 aa, apo",
+   "n_samples": 5,
+   "n_residues_pred": 76,
+   "n_residues_compared": 76,
+   "ca_rmsd_A": {
+    "min": 0.64,
+    "median": 0.943,
+    "max": 1.351
+   },
+   "tm_score": {
+    "min": 0.93,
+    "median": 0.9505,
+    "max": 0.97
+   },
+   "n_tokens": 76,
+   "fold_s": 4.35,
+   "peak_vram_gb": 13.98,
+   "plddt_mean": [
+    0.8099,
+    0.8103,
+    0.8075,
+    0.8115,
+    0.811
+   ]
+  },
+  "1stp": {
+   "description": "Streptavidin, 159 aa SEQRES, biotin as CCD BTN",
+   "n_samples": 5,
+   "n_residues_pred": 159,
+   "n_residues_compared": 121,
+   "ca_rmsd_A": {
+    "min": 0.358,
+    "median": 0.382,
+    "max": 0.418
+   },
+   "tm_score": {
+    "min": 0.9899,
+    "median": 0.9914,
+    "max": 0.9924
+   },
+   "ligand_BTN_heavy_atom_rmsd_A": {
+    "n_atoms": 16,
+    "min": 0.444,
+    "median": 0.475,
+    "max": 0.914,
+    "note": "superposed on protein CA frame; atoms matched by name"
+   },
+   "n_tokens": 175,
+   "fold_s": 4.46,
+   "peak_vram_gb": 15.75,
+   "plddt_mean": [
+    0.8637,
+    0.8653,
+    0.8654,
+    0.8621,
+    0.8623
+   ],
+   "iptm_mean": 0.969,
+   "note": "121 of 159 residues are ordered in the experimental entry; comparison is over those 121"
+  }
+ },
+ "vram_headroom": {
+  "observed": "13.98 GB at 76 tokens, 15.75 GB at 175 tokens on a 16.0 GB card",
+  "implication": "the full trunk leaves ~0.6 GB at 175 tokens. Longer targets will OOM with chunk_size None; use --model fast, or set a chunk size, for sequences much beyond ~200 tokens on 16 GB."
+ }
+}

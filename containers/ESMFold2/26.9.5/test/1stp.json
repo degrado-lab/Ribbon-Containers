@@ -1,0 +1,15 @@
+{
+ "name": "1stp",
+ "note": "Streptavidin (PDB 1STP) with biotin as CCD code BTN. Exercises the ligand path through the baked ccd.pkl.",
+ "protein": {
+  "id": "A",
+  "sequence": "DPSKDSKAQVSAAEAGITGTWYNQLGSTFIVTAGADGALTGTYESAVGNAESRYVLTGRYDSAPATDGSGTALGWTVAWKNNYRNAHSATTWSGQYVGGAEARINTQWLLTSGTTEANAWKSTLVGHDTFTKVKPSAASIDAAKKAGVNNGNPLDAVQQ"
+ },
+ "ligand": {
+  "id": "L",
+  "ccd": [
+   "BTN"
+  ]
+ },
+ "seed": 0
+}

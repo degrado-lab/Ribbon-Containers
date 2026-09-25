@@ -1,0 +1,75 @@
+{
+ "container": "ESMFold2",
+ "version": "26.9.5",
+ "built_on": "ssh:128.32.151.24",
+ "base_image": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba",
+ "base_image_note": "cuda12.6.0 has a directory in the repo but is not published on DockerHub; 12.2.0 is published, matches the host driver's CUDA version, and is the tag Boltz/2.2.0 and ESM3/3.2.0 both use. The pip torch wheels carry their own CUDA 12.6 runtime, so the base tag does not set the compute stack.",
+ "docker": "28.1.1",
+ "apptainer": "1.4.3",
+ "gpu": "NVIDIA GeForce RTX 4080 16376 MiB",
+ "driver": "535.309.01",
+ "disk_avail_gb_at_start": 204,
+ "docker_reclaimable_gb": {
+  "images": 242,
+  "volumes": 146,
+  "note": "not pruned - left for the owner to decide"
+ },
+ "pins": {
+  "python": "3.12",
+  "torch": "2.7.1+cu126",
+  "esm": "git+https://github.com/Biohub/esm.git@f652b471d29da828b31e9b7a9cf7d0a7803240f5",
+  "transformers": "git+https://github.com/Biohub/transformers.git@3a8956fb4d4ea16b0ec8e71deef2c2909b6a5cbf",
+  "biotite": "1.7.1",
+  "rdkit": "2026.3.6"
+ },
+ "weights": {
+  "esmc": "biohub/ESMC-6B",
+  "esmfold2": "biohub/ESMFold2",
+  "esmfold2_fast": "biohub/ESMFold2-Fast",
+  "gated": false,
+  "stored_dtype": "bfloat16",
+  "note": "All three repos are published with fp32 tensors and all three are cast to bf16 here. load_esmc() defaults to precision='bf16' and the trunks are loaded with torch_dtype=torch.bfloat16, so the baked bf16 copies are bit-identical at inference."
+ },
+ "test_targets": {
+  "1UBQ": {
+   "len": 76
+  },
+  "1STP": {
+   "len": 159
+  }
+ },
+ "measured": {
+  "docker_image": "nicholasfreitas/esmfold2:docker-26.9.5",
+  "docker_image_size_gb": 21.3,
+  "weights_stored_gb": {
+   "ESMC-6B": 12.7,
+   "ESMFold2": 0.89,
+   "ESMFold2-Fast": 0.38
+  },
+  "weights_published_gb": {
+   "ESMC-6B": 25.41,
+   "ESMFold2": 1.36,
+   "ESMFold2-Fast": 0.76
+  },
+  "weight_revisions": {
+   "ESMC-6B": "45b0fa5d7fb06faefbd5e3b89bdcef35d564e79a",
+   "ESMFold2": "8fc3ff471022fdce52c77030685eb775de0c00a3",
+   "ESMFold2-Fast": "c6c7958d63f5f2f1f0fed0bb9462316f8ccceea6"
+  },
+  "shards_cast_to_bf16": 8
+ },
+ "build_gotchas": [
+  "esm declares transformers as a direct URL on @main, so pip raises ResolutionImpossible against a commit pin. Install esm first (it resolves its own tree), then pip install --no-deps --force-reinstall pinned transformers. main has already moved past 3a8956fb, so the pin is load-bearing for reproducing the Round 4 runs.",
+  "import esm initialises Triton's driver ('0 active drivers' with no GPU), and docker build has no GPU. The build gate therefore verifies torch's version string, both commit SHAs from direct_url.json, and module paths on disk; imports and a real fold are verified in the GPU validation run.",
+  "apptainer build's mksquashfs defaults to 25% of physical RAM (~15 GB of the box's 62 GB), but jobs submitted without an explicit #SBATCH --mem get DefMemPerCPU=2000 MB and are OOM-killed at SIF creation. Build with --mksquashfs-args '-mem 512M -processors 2', or request memory explicitly.",
+  "ESMFold2InputBuilder() calls load_ccd(), which ignores ESMFOLD2_MODELS and hf_hub_downloads biohub/ESMFold2 ccd.pkl into the HF cache. Baking ccd.pkl into /app/models/ESMFold2 is not enough: set ESMCFOLD_CCD_PATH (note the spelling, ESMCFOLD not ESMFOLD2; read at import time in esm/models/esmfold2/conformers.py) to the file. Caught only by folding under --containall --net --network=none; with a host HF cache mounted the container appears stand-alone but is not. definition.def's %test now asserts the var resolves."
+ ],
+ "validation": {
+  "method": "apptainer run --nv --containall --net --network=none",
+  "note": "no host $HOME, no host /tmp, no route to the Hub, so a fold can only use baked weights",
+  "targets": [
+   "1UBQ (76 aa, apo)",
+   "1STP (159 aa, biotin via CCD BTN)"
+  ]
+ }
+}
