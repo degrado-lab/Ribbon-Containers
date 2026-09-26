@@ -1,0 +1,96 @@
+{
+  "container": "LDDM",
+  "version": "0.1.0",
+  "built_on": "ssh:128.32.151.24",
+  "base_image": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba",
+  "base_image_note": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba is published locally on the host daemon; PyTorch wheels bundle their own CUDA 12 runtime so the base tag does not restrict the compute stack.",
+  "docker": "28.1.1",
+  "apptainer": "1.4.3",
+  "gpu": "NVIDIA GeForce RTX 4080 16376 MiB",
+  "driver": "535.309.01",
+  "disk_avail_gb_at_start": 1500,
+  "pins": {
+    "python": "3.11",
+    "lddm_commit": "f254fb4f8525b3803e79eb95e9f1a163fe8b2459",
+    "torch": "2.6.0+cu124",
+    "torch_scatter": "2.1.2+pt26cu124",
+    "torch_geometric": "2.7.0",
+    "lightning": "2.6.5",
+    "rdkit": "2023.9.6",
+    "biopython": "1.83",
+    "prody": "2.6.1",
+    "prolif": "2.0.3",
+    "posebusters": "0.3.1",
+    "biotite": "1.6.0",
+    "numpy": "1.26.4",
+    "scipy": "1.13.0",
+    "pandas": "2.2.3",
+    "pot": "0.9.4",
+    "einops": "0.8.2",
+    "gnina": "1.1",
+    "reduce": "4.15"
+  },
+  "weights": {
+    "zenodo_record": "22754501",
+    "gated": false,
+    "checkpoints": [
+      {
+        "name": "lddm.ckpt",
+        "description": "CD+BB+BN - Main model used for experiments in paper",
+        "license": "CC-BY-NC 4.0",
+        "size_bytes": 168265378,
+        "path": "/app/models/checkpoints/lddm.ckpt"
+      },
+      {
+        "name": "lddm_CDBB.ckpt",
+        "description": "CD+BB - Model trained without BindingNet",
+        "license": "MIT",
+        "size_bytes": 168461579,
+        "path": "/app/models/checkpoints/lddm_CDBB.ckpt"
+      }
+    ],
+    "geometry_reference": {
+      "name": "ligands.sdf",
+      "description": "3D validity geometry reference distribution source",
+      "size_bytes": 238533845,
+      "path": "/app/data/validity3d/ligands.sdf",
+      "precompiled_cache": [
+        "/app/data/validity3d/ligands_geometry_values.p",
+        "/app/data/validity3d/ligands_geometry_kernel_densities.p"
+      ]
+    },
+    "synspace": {
+      "description": "SynSpace chemical space (44,944 building blocks, 3 reactions)",
+      "files": [
+        "building_blocks.csv",
+        "building_blocks.pkl",
+        "reactions.json",
+        "reaction_to_building_blocks.csv",
+        "reaction_to_building_blocks.pkl"
+      ],
+      "path": "/app/data/synspace"
+    }
+  },
+  "test_targets": {
+    "kras": {
+      "protein": "test/kras.pdb",
+      "ref_ligand": "test/kras_ref_ligand.sdf",
+      "frag": "test/kras_frag.sdf"
+    }
+  },
+  "build_gotchas": [
+    "Apptainer mounts the image read-only, so ReferenceGeometry must precompile ligands_geometry_values.p and ligands_geometry_kernel_densities.p into /app/data/validity3d during the build; otherwise runtime fails with [Errno 30] Read-only file system.",
+    "reduce must be present on PATH as 'reduce' for interactions_local evaluation.",
+    "gnina binary v1.1 must be present on PATH as 'gnina' for CNN affinity / Vina scoring.",
+    "mksquashfs on this host must be invoked with --mksquashfs-args '-mem 512M -processors 2' to avoid OOM-killer under Slurm.",
+    "All Torch/Triton/HF caches must be redirected to /tmp in %environment because Apptainer SIF filesystem is read-only."
+  ],
+  "validation": {
+    "method": "apptainer run --nv --containall --net --network=none",
+    "note": "Complete isolation: no host $HOME, no host /tmp, no route to internet.",
+    "targets": [
+      "De novo design: 2 samples on KRAS pocket",
+      "Docking: 2 samples on KRAS reference ligand"
+    ]
+  }
+}

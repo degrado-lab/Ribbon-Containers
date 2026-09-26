@@ -1,0 +1,26 @@
+{
+  "container": "lddm_0.1.0.sif",
+  "date": "2026-09-26 03:41:34 UTC",
+  "isolation": "--nv --containall --net --network=none",
+  "tests": {
+    "de_novo_design": {
+      "status": "PASS",
+      "runtime_seconds": 74.39,
+      "output_file": "test_out/de_novo.sdf",
+      "output_size_bytes": 6696,
+      "n_samples": 2,
+      "n_steps": 25,
+      "target": "KRAS pocket"
+    },
+    "docking": {
+      "status": "PASS",
+      "runtime_seconds": 73.09,
+      "output_file": "test_out/docked.sdf",
+      "output_size_bytes": 7116,
+      "n_samples": 2,
+      "n_steps": 25,
+      "target": "KRAS reference ligand"
+    }
+  },
+  "peak_vram_mib": 523.0
+}

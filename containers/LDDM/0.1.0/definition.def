@@ -1,0 +1,82 @@
+Bootstrap: docker
+From: nicholasfreitas/lddm:docker-0.1.0
+
+%labels
+    Maintainer Nicholas Freitas
+    Description LDDM: A Unified 3D Generative Model for Synthesizable Structure-Based Drug Design (0.1.0) with baked checkpoints, precompiled 3D validity cache, and SynSpace library.
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH
+    export PYTHONPATH=/app/lddm
+    export LDDM_MODELS=/app/models
+    export LDDM_DATA=/app/data
+    export LDDM_CHECKPOINT=/app/models/checkpoints/lddm.ckpt
+    export LDDM_CHECKPOINT_MIT=/app/models/checkpoints/lddm_CDBB.ckpt
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+
+    # -------- keep every cache off the read-only image --------
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+    export PYSTOW_HOME=/tmp/pystow
+
+    # -------- activate env for all interactive shells --------
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    # Ensure every apptainer run uses the env
+    if [ $# -eq 0 ]; then
+        bash --login -i
+    else
+        micromamba run -n app "$@"
+    fi
+
+%test
+    # Verify environment, executables, baked weights, and precompiled cache without GPU
+    export PYSTOW_HOME=/tmp/pystow
+    export HF_HOME=/tmp/hf
+    export MPLCONFIGDIR=/tmp/mpl
+    /opt/conda/envs/app/bin/python -c "
+import json, os, shutil
+
+# 1. Executables on PATH
+for exe in ['reduce', 'gnina', 'lddm-sample', 'lddm-programmable', 'lddm-prep-chemspace', 'lddm-prep-synspace']:
+    assert shutil.which(exe), f'Executable not found on PATH: {exe}'
+
+# 2. Baked weights and datasets
+manifest_path = '/app/models/WEIGHTS.json'
+assert os.path.exists(manifest_path), f'Missing {manifest_path}'
+manifest = json.load(open(manifest_path))
+files = manifest.get('files', {})
+
+required_files = [
+    'lddm.ckpt',
+    'lddm_CDBB.ckpt',
+    'ligands.sdf',
+    'ligands_geometry_values.p',
+    'ligands_geometry_kernel_densities.p',
+    'reactions.json',
+    'building_blocks.pkl',
+    'reaction_to_building_blocks.pkl'
+]
+
+for req in required_files:
+    assert req in files, f'Missing in manifest: {req}'
+    p = files[req]['path']
+    assert os.path.exists(p), f'Missing on disk: {p}'
+    assert os.path.getsize(p) > 0, f'File is empty: {p}'
+
+# 3. Python package imports
+import torch, torch_geometric, torch_scatter, lightning, rdkit, lddm
+from lddm.sbdd_metrics.metrics import Validity3DEvaluator
+
+print('=== LDDM %test PASSED: All imports succeeded, models and precompiled caches verified ===')
+"
