@@ -1,0 +1,110 @@
+name: "Publish Container"
+
+on:
+  workflow_dispatch:
+    inputs:
+      container-name:
+        description: "Name of container to publish (subfolder under containers/)"
+        required: true
+      container-version:
+        description: "Version folder to publish (e.g. 0.1.0)"
+        required: true
+      host-workspace:
+        description: "Path to host workspace where pre-built .sif files reside"
+        required: false
+        default: ""
+
+jobs:
+  publish-local:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Log in to DockerHub
+        if: always()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image (versioned)
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
+
+          echo "Pushing Docker image $IMAGE_NAME"
+          docker push "$IMAGE_NAME"
+
+      - name: Tag & push Docker image as 'latest'
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+
+          VERSIONED_IMAGE="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-${CONTAINER_VERSION}"
+          LATEST_IMAGE="${{ secrets.DOCKER_USERNAME }}/${CONTAINER_NAME_LOWER}:docker-latest"
+
+          echo "Tagging $VERSIONED_IMAGE as $LATEST_IMAGE"
+          docker tag "$VERSIONED_IMAGE" "$LATEST_IMAGE"
+
+          echo "Pushing 'latest' tag"
+          docker push "$LATEST_IMAGE"
+
+      - name: Locate Pre-built Apptainer SIF
+        run: |
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          HOST_DIR="${{ github.event.inputs['host-workspace'] || env.HOST_WORKSPACE }}"
+
+          TARGET_DIR="containers/$CONTAINER_NAME/$CONTAINER_VERSION"
+          SIF_NAME="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+          mkdir -p "$TARGET_DIR"
+
+          if [ ! -f "$TARGET_DIR/$SIF_NAME" ]; then
+            for CANDIDATE_DIR in "$HOST_DIR/$TARGET_DIR" "/home/freitas/workspace/Ribbon-Containers/$TARGET_DIR"; do
+              if [ -n "$CANDIDATE_DIR" ] && [ -d "$CANDIDATE_DIR" ]; then
+                MATCH=$(find "$CANDIDATE_DIR" -maxdepth 1 -name "*.sif" | head -n 1)
+                if [ -n "$MATCH" ] && [ -f "$MATCH" ]; then
+                  echo "Found SIF on host: $MATCH"
+                  ln -f "$MATCH" "$TARGET_DIR/$SIF_NAME" 2>/dev/null || cp "$MATCH" "$TARGET_DIR/$SIF_NAME"
+                  break
+                fi
+              fi
+            done
+          fi
+
+          if [ ! -f "$TARGET_DIR/$SIF_NAME" ]; then
+            echo "Error: Could not locate $SIF_NAME in $TARGET_DIR or $HOST_DIR/$TARGET_DIR"
+            exit 1
+          fi
+
+          echo "SIF file ready at: $TARGET_DIR/$SIF_NAME"
+          ls -lh "$TARGET_DIR/$SIF_NAME"
+
+      - name: Push SIF to DockerHub (versioned) with ORAS
+        run: |
+          oras login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}" docker.io
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          SIF_NAME="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          echo "Pushing $SIF_NAME to ORAS registry on DockerHub with tag '${CONTAINER_VERSION}'"
+          apptainer push "$SIF_NAME" oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:${CONTAINER_VERSION}
+
+      - name: Push SIF to DockerHub (latest) with ORAS
+        run: |
+          oras login -u "${{ secrets.DOCKER_USERNAME }}" -p "${{ secrets.DOCKER_PASSWORD }}" docker.io
+          CONTAINER_NAME="${{ github.event.inputs['container-name'] }}"
+          CONTAINER_VERSION="${{ github.event.inputs['container-version'] }}"
+          CONTAINER_NAME_LOWER=$(echo "$CONTAINER_NAME" | tr '[:upper:]' '[:lower:]')
+          SIF_NAME="${CONTAINER_NAME_LOWER}_${CONTAINER_VERSION}.sif"
+
+          cd containers/$CONTAINER_NAME/$CONTAINER_VERSION
+          echo "Also pushing $SIF_NAME with tag 'latest'"
+          apptainer push "$SIF_NAME" oras://docker.io/${{ secrets.DOCKER_USERNAME }}/$CONTAINER_NAME_LOWER:latest

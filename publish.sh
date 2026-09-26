@@ -9,7 +9,9 @@ fi
 CONTAINER_NAME=$1
 CONTAINER_VERSION=$2
 
-act -j build-and-push-local --secret-file ../secrets/.secrets \
+act -j publish-local -W .github/workflows/publish-container-local.yml --secret-file ../secrets/.secrets \
     --input container-name="$CONTAINER_NAME" \
     --input container-version="$CONTAINER_VERSION" \
+    --input host-workspace="$PWD" \
+    --env HOST_WORKSPACE="$PWD" \
     -P ubuntu-latest=-self-hosted

@@ -9,7 +9,7 @@ fi
 CONTAINER_NAME=$1
 CONTAINER_VERSION=$2
 
-act -j build-and-push-local --secret-file ../secrets/.secrets \
+act -j build-and-push-local-docker-only --secret-file ../secrets/.secrets \
     --input container-name="$CONTAINER_NAME" \
     --input container-version="$CONTAINER_VERSION" \
     -P ubuntu-latest=-self-hosted
