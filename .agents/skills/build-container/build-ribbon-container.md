@@ -29,7 +29,7 @@ R=~/workspace/Ribbon-Containers
 cat $R/README.md                    # naming + version rules
 cat $R/containers/README.md          # build best practices
 cat $R/templates/Dockerfile $R/templates/definition.def
-cat $R/build.sh $R/build-docker.sh $R/build-app.sh
+cat $R/build.sh $R/build-docker.sh $R/build-app.sh $R/publish.sh
 cat $R/.github/workflows/build-container-local-app-only.yml
 ls -1 $R/containers                  # pick your precedents
 ```
@@ -341,7 +341,10 @@ apptainer run --nv --containall --net --network=none <name>_<version>.sif \
 - `--net --network=none` — no route anywhere
 
 Then **score the output against a known reference**, not just check it
-exists. For ESMFold2 that meant CA RMSD and TM-score against the
+exists. Note that runs using `--containall` may not produce output, so you may
+have to run a second time without the flag or with a bound directory before 
+confirming the output matches expectation.
+For ESMFold2 that meant CA RMSD and TM-score against the
 experimental structures, plus ligand heavy-atom RMSD for the complex:
 1UBQ at 0.94 Å median / TM 0.951, 1STP at 0.38 Å / TM 0.991 with biotin
 at 0.48 Å. Record fold time and peak VRAM in
@@ -378,11 +381,13 @@ whether a user reaches for the smaller variant.
   the command and stop:
 
   ```bash
-  cd ~/workspace/Ribbon-Containers && ./build.sh <Software> <Version>
+  cd ~/workspace/Ribbon-Containers && ./publish.sh <Software> <Version>
   ```
 
   `build.sh` runs both stages via `act`; `build-docker.sh` and
-  `build-app.sh` run one each. All three take
+  `build-app.sh` run one each. 
+  `publish.sh` publishes the existing containers (the ones you just built) to DockerHub.
+  All four take
   `<container-name> <container-version>`, read
   `../secrets/.secrets`, and map `ubuntu-latest=-self-hosted`.
 
