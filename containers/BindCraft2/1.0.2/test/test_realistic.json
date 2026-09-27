@@ -1,0 +1,70 @@
+{
+  "targets": [
+    {
+      "name": "hPDL1",
+      "target_path": "hPDL1.pdb",
+      "chains": "A",
+      "hotspots": "54,56,66,115"
+    }
+  ],
+  "modality": "binder",
+  "binder_lengths": [
+    55,
+    55
+  ],
+  "number_of_final_designs": 1,
+  "max_trajectories": 1,
+  "screen_steps": 15,
+  "refine_steps": 10,
+  "anneal_steps": 15,
+  "harden_steps": 5,
+  "mutate_steps": 10,
+  "min_plddt_screen": 0.3,
+  "min_plddt_refine": 0.3,
+  "min_plddt_anneal": 0.3,
+  "min_plddt_harden": 0.3,
+  "min_plddt_final": 0.3,
+  "min_iptm_anneal": 0.2,
+  "min_iptm_harden": 0.2,
+  "min_iptm_mutate": 0.2,
+  "min_iptm_final": 0.2,
+  "sequence_candidates": 2,
+  "kept_sequences": 1,
+  "design_recycles": 1,
+  "validation_recycles": 1,
+  "save_design_trajectory": true,
+  "save_failed_refolds": true,
+  "save_binder_monomers": true,
+  "filters": {
+    "Unbound_Binder_pLDDT": {
+      "threshold": 0.3,
+      "higher": true
+    },
+    "pTM": {
+      "threshold": 0.2,
+      "higher": true
+    },
+    "i_pTM": {
+      "threshold": 0.1,
+      "higher": true
+    },
+    "i_pAE": {
+      "threshold": 0.8,
+      "higher": false
+    },
+    "Binder_RMSD": {
+      "threshold": 10.0,
+      "higher": false
+    },
+    "Backbone_Clashes": {
+      "threshold": 10.0,
+      "higher": false
+    },
+    "Interface_Residues": {
+      "threshold": 1.0,
+      "higher": true
+    }
+  },
+  "project_folder": "output",
+  "campaign_seed": 42
+}

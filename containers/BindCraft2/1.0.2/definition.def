@@ -1,0 +1,98 @@
+Bootstrap: docker
+From: nicholasfreitas/bindcraft2:docker-1.0.2
+
+%labels
+    Maintainer Nicholas Freitas
+    Description BindCraft2: Protein Binder Design Workflow (1.0.2) with baked AlphaFold 2 and ProteinMPNN weights.
+    Software BindCraft2
+    Version 1.0.2
+    Commit f5275212e48a379626c72a32b7f13129f3ac1417
+
+%environment
+    # Core environment variables
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH
+    export PYTHONPATH=/app/bindcraft
+    export BINDCRAFT_AF2_PARAMS=/app/models/alphafold
+    export BINDCRAFT_WEIGHTS=/app/models
+    export BINDCRAFT_MPNN_WEIGHTS=/app/bindcraft/bindcraft/weights/proteinmpnn/weights_neutral
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+
+    # Keep all caches off read-only Apptainer filesystem
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+    export JAX_COMPILATION_CACHE_DIR=/tmp/bindcraft_xla_cache
+
+    # Activate environment for interactive shell
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    if [ $# -eq 0 ]; then
+        bash --login -i
+    else
+        micromamba run -n app "$@"
+    fi
+
+%test
+    # Verify environment, executables, baked weights, and selfcheck without GPU
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export MPLCONFIGDIR=/tmp/mpl
+    export JAX_COMPILATION_CACHE_DIR=/tmp/bindcraft_xla_cache
+
+    /opt/conda/envs/app/bin/python -c "
+import json, os, shutil, sys
+
+# 1. Verify executable shims
+assert shutil.which('bindcraft'), 'bindcraft CLI executable not found on PATH'
+
+# 2. Verify baked weights and manifest
+manifest_path = '/app/models/WEIGHTS.json'
+assert os.path.exists(manifest_path), f'Missing manifest {manifest_path}'
+with open(manifest_path) as f:
+    manifest = json.load(f)
+
+af_files = manifest['models']['alphafold2']['files']
+required_af_models = [
+    'params_model_1_multimer_v3.npz',
+    'params_model_2_multimer_v3.npz',
+    'params_model_3_multimer_v3.npz',
+    'params_model_4_multimer_v3.npz',
+    'params_model_5_multimer_v3.npz',
+    'params_model_1_ptm.npz',
+    'params_model_2_ptm.npz'
+]
+for req in required_af_models:
+    assert req in af_files, f'Missing in AF2 manifest: {req}'
+    p = os.path.join('/app/models/alphafold', req)
+    assert os.path.isfile(p), f'Missing parameter file: {p}'
+    assert os.path.getsize(p) >= (100 << 20), f'Parameter file {p} is too small'
+
+# 3. Verify ProteinMPNN weights
+mpnn_files = manifest['models']['proteinmpnn']['files']
+for variant in ['weights_neutral', 'weights_negative', 'weights_positive']:
+    for ckpt in ['v_48_002.npz', 'v_48_010.npz', 'v_48_020.npz', 'v_48_030.npz']:
+        key = f'{variant}/{ckpt}'
+        assert key in mpnn_files, f'Missing in ProteinMPNN manifest: {key}'
+        p = os.path.join('/app/models/proteinmpnn', variant, ckpt)
+        assert os.path.isfile(p), f'Missing ProteinMPNN file: {p}'
+        assert os.path.getsize(p) >= (1 << 20), f'ProteinMPNN file {p} too small'
+
+# 4. Verify Python imports
+import jax, haiku, optax, biotite, biotraj, matplotlib, numpy, scipy, ml_collections, absl
+import bindcraft, cuequivariance, cuequivariance_jax
+
+# 5. Run upstream selfcheck for cuda12
+from bindcraft.selfcheck import report
+rc = report('cuda12')
+assert rc == 0, f'bindcraft selfcheck returned {rc}'
+
+print('=== BindCraft2 %test PASSED: executables, baked weights, and selfcheck verified ===')
+"

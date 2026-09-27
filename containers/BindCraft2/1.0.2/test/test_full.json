@@ -1,0 +1,16 @@
+{
+    "targets": [
+        {
+            "name": "my_target",
+            "target_path": "hPDL1.pdb",
+            "chains": "A"
+        }
+    ],
+    "modality": "binder",
+    "binder_lengths": [
+        80,
+        80
+    ],
+    "number_of_final_designs": 10,
+    "project_folder": "out_test"
+}

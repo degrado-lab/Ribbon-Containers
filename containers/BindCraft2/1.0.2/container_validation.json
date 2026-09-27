@@ -1,0 +1,124 @@
+{
+  "container": "bindcraft2_1.0.2.sif",
+  "docker_image": "nicholasfreitas/bindcraft2:docker-1.0.2",
+  "software": "BindCraft2",
+  "version": "1.0.2",
+  "commit": "f5275212e48a379626c72a32b7f13129f3ac1417",
+  "date": "2026-09-26 09:01:34 UTC",
+  "gpu": "NVIDIA GeForce RTX 4080 (16376 MiB VRAM)",
+  "driver": "535.309.01",
+  "cuda_version": "12.2",
+  "isolation": "--nv --containall --net --network=none",
+  "validation_command": "apptainer run --nv --containall --net --network=none --bind $(pwd)/out_isolated:/workspace/out_isolated bindcraft2_1.0.2.sif bindcraft design /app/test/test_smoke.json --set 'project_folder=/workspace/out_isolated'",
+  "tests": {
+    "bindcraft_selfcheck": {
+      "command": "apptainer test bindcraft2_1.0.2.sif",
+      "status": "PASS",
+      "accelerator": "cuda12",
+      "modules_verified": [
+        "jax",
+        "haiku",
+        "optax",
+        "biotite",
+        "biotraj",
+        "matplotlib",
+        "numpy",
+        "scipy",
+        "ml_collections",
+        "absl",
+        "bindcraft",
+        "cuequivariance",
+        "cuequivariance_jax",
+        "cuequivariance_ops_cu12"
+      ],
+      "checkpoints_verified": [
+        "params_model_1_multimer_v3.npz",
+        "params_model_2_multimer_v3.npz",
+        "params_model_3_multimer_v3.npz",
+        "params_model_4_multimer_v3.npz",
+        "params_model_5_multimer_v3.npz",
+        "params_model_1_ptm.npz",
+        "params_model_2_ptm.npz",
+        "ProteinMPNN neutral/negative/positive variants"
+      ]
+    },
+    "isolated_design_trajectory": {
+      "status": "PASS",
+      "target": "Human PD-L1 (hPDL1, 115 residues, hotspots 54,56,66,115)",
+      "modality": "binder (length 35)",
+      "trajectory_id": "design_l35_7d829c9e59c31b51",
+      "design_runtime_seconds": 119.36,
+      "peak_vram_mib": 4348.0,
+      "output_files": {
+        "summary.csv": 1595,
+        "campaign_metadata.json": 8720,
+        "!_Trajectories.csv": 313,
+        "design_l35_7d829c9e59c31b51_losses.csv": 306
+      },
+      "metrics": {
+        "ptm": 0.69,
+        "iptm": 0.17,
+        "binder_contacts": 4.6,
+        "interface_contacts": 3.8,
+        "binder_pae": 0.20,
+        "interface_pae": 0.07,
+        "compactness": 1.80,
+        "binder_helicity": -0.39
+      }
+    },
+    "isolated_realistic_design_full": {
+      "status": "PASS",
+      "target": "Human PD-L1 (hPDL1, 115 residues, hotspots 54,56,66,115)",
+      "modality": "binder (length 55)",
+      "trajectory_id": "design_l55_31b7c318e1a2ee9e",
+      "command": "apptainer run --nv --containall --net --network=none --bind $(pwd)/realistic_run:/workspace/realistic_run bindcraft2_1.0.2.sif bindcraft design /workspace/realistic_run/test_realistic.json --set 'project_folder=/workspace/realistic_run/output'",
+      "exit_code": 0,
+      "stages_passed": [
+        "screen (i_pTM=0.24, pLDDT=0.51)",
+        "refine (i_pTM=0.21, pLDDT=0.51)",
+        "anneal (i_pTM=0.22, pLDDT=0.76)",
+        "harden (i_pTM=0.33, pLDDT=0.76)",
+        "mutate (i_pTM=0.26, pLDDT=0.67)",
+        "hallucination successful",
+        "ProteinMPNN redesign (2 sequence candidates)",
+        "AlphaFold validation refolding (model_1_ptm, model_2_ptm)"
+      ],
+      "generated_structures": {
+        "trajectory_complex": {
+          "cif": "1_Trajectories/design_l55_31b7c318e1a2ee9e/design_l55_31b7c318e1a2ee9e_trajectory.cif",
+          "pdb": "1_Trajectories/design_l55_31b7c318e1a2ee9e/design_l55_31b7c318e1a2ee9e_trajectory.pdb",
+          "atoms": 1387,
+          "chains": "Chain A (target, 115 res), Chain B (binder, 55 res)"
+        },
+        "mpnn_refolded_candidate1": {
+          "cif": "2_Refolded/Complexes/design_l55_31b7c318e1a2ee9e_candidate1.cif",
+          "pdb": "2_Refolded/Complexes/design_l55_31b7c318e1a2ee9e_candidate1.pdb",
+          "atoms": 1374,
+          "sequence": "MSPEEKRQAAIEAAVEELLGLSPREAWEKLRASEFSKEEQMEVFERWFRATFGPN",
+          "plddt": 0.76,
+          "target_plddt": 0.92,
+          "unbound_plddt": 0.82
+        },
+        "mpnn_refolded_candidate2": {
+          "cif": "2_Refolded/Complexes/design_l55_31b7c318e1a2ee9e_candidate2.cif",
+          "pdb": "2_Refolded/Complexes/design_l55_31b7c318e1a2ee9e_candidate2.pdb",
+          "atoms": 1375,
+          "sequence": "MSEEEKRKKKIEETVEALLGKSPREAWEVLSASDLSKEEQMEVMERWFRAEFGPN",
+          "plddt": 0.86,
+          "target_plddt": 0.92,
+          "unbound_plddt": 0.90,
+          "binder_rmsd": 0.63
+        },
+        "binder_monomers": [
+          "2_Refolded/BinderMonomer/design_l55_31b7c318e1a2ee9e_candidate1_monomer.pdb (453 atoms)",
+          "2_Refolded/BinderMonomer/design_l55_31b7c318e1a2ee9e_candidate2_monomer.pdb (454 atoms)"
+        ]
+      },
+      "format_conversion": {
+        "tool": "cif2pdb.py (biotite-based)",
+        "status": "PASS",
+        "converted": "5/5 structures converted to standard PDB"
+      }
+    }
+  }
+}

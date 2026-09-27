@@ -1,0 +1,26 @@
+{
+  "targets": [
+    {
+      "name": "hPDL1",
+      "target_path": "hPDL1.pdb",
+      "chains": "A",
+      "hotspots": "54,56,66,115"
+    }
+  ],
+  "modality": "binder",
+  "binder_lengths": [
+    35,
+    35
+  ],
+  "number_of_final_designs": 1,
+  "max_trajectories": 5,
+  "screen_steps": 2,
+  "refine_steps": 2,
+  "anneal_steps": 2,
+  "harden_steps": 1,
+  "mutate_steps": 2,
+  "design_recycles": 1,
+  "validation_recycles": 1,
+  "project_folder": "out_test",
+  "campaign_seed": 42
+}

@@ -1,0 +1,83 @@
+{
+  "container": "BindCraft2",
+  "version": "1.0.2",
+  "built_on": "Local Server (Slurm LocalQ)",
+  "base_image": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba",
+  "base_image_note": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba is present locally and provides CUDA 12.2 runtime with Micromamba 2.2.0 on Ubuntu 22.04.",
+  "docker": "28.1.1",
+  "apptainer": "1.4.3",
+  "gpu": "NVIDIA GeForce RTX 4080 (16376 MiB VRAM)",
+  "driver": "535.309.01",
+  "disk_avail_gb_at_start": 1500,
+  "pins": {
+    "python": "3.12",
+    "bindcraft_version": "1.0.2",
+    "bindcraft_commit": "f5275212e48a379626c72a32b7f13129f3ac1417",
+    "accelerator": "cuda12",
+    "jax": "0.11.2",
+    "jaxlib": "0.11.2",
+    "jax_cuda12_plugin": "0.11.2",
+    "jax_cuda12_pjrt": "0.11.2",
+    "cuequivariance": "0.12.0",
+    "cuequivariance_jax": "0.11.1",
+    "cuequivariance_ops_cu12": "0.11.1",
+    "dm_haiku": "0.0.17",
+    "optax": "0.2.8",
+    "biotite": "1.7.1",
+    "biotraj": "1.2.2",
+    "matplotlib": "3.11.2",
+    "scipy": "1.18.1",
+    "numpy": "2.5.3",
+    "ml_collections": "1.1.0",
+    "absl_py": "2.5.0",
+    "nvidia_cudnn_cu12": "9.26.0.51",
+    "nvidia_cublas_cu12": "12.9.2.10"
+  },
+  "weights": {
+    "alphafold2": {
+      "source_url": "https://storage.googleapis.com/alphafold/alphafold_params_2022-12-06.tar",
+      "gated": false,
+      "license": "Apache 2.0 / CC-BY 4.0",
+      "size_gb": 5.3,
+      "path": "/app/models/alphafold",
+      "required_models": [
+        "model_1_multimer_v3",
+        "model_2_multimer_v3",
+        "model_3_multimer_v3",
+        "model_4_multimer_v3",
+        "model_5_multimer_v3",
+        "model_1_ptm",
+        "model_2_ptm"
+      ]
+    },
+    "proteinmpnn": {
+      "source": "BindCraft2 repository package data",
+      "license": "MIT",
+      "path": "/app/models/proteinmpnn",
+      "variants": [
+        "weights_neutral",
+        "weights_negative",
+        "weights_positive"
+      ]
+    },
+    "provenance_manifest": "/app/models/WEIGHTS.json"
+  },
+  "test_target": {
+    "hPDL1": {
+      "path": "test/hPDL1.pdb",
+      "chains": "A",
+      "hotspots": "54,56,66,115"
+    }
+  },
+  "build_gotchas": [
+    "Apptainer mounts images read-only under --containall, so JAX/XLA compilation cache, HuggingFace, Triton, and Matplotlib caches must be pointed to /tmp.",
+    "mksquashfs on this host must be invoked with --mksquashfs-args '-mem 512M -processors 2' to prevent OOM killer under Slurm cgroups.",
+    "CUDA 12 driver (535.309.01) matches jax[cuda12] and cuequivariance-ops-cu12. Using cuda12 guarantees forward and backward compatibility across CUDA 12 and CUDA 13 host drivers.",
+    "bindcraft CLI entrypoint shim must be placed on PATH in both /opt/conda/envs/app/bin/bindcraft and /usr/local/bin/bindcraft to avoid argument swallowing by shell wrappers.",
+    "AlphaFold parameters must be baked into the image at /app/models/alphafold and symlinked into /app/bindcraft/bindcraft/weights/alphafold with BINDCRAFT_AF2_PARAMS set so offline compute nodes need no internet."
+  ],
+  "validation": {
+    "method": "apptainer run --nv --containall --net --network=none bindcraft2_1.0.2.sif",
+    "target": "Design 1 short binder against human PD-L1 (hPDL1) target with JAX AlphaFold and ProteinMPNN end-to-end pipeline."
+  }
+}
