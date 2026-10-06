@@ -1,0 +1,58 @@
+{
+  "container": "Foundry",
+  "version": "0.2.0",
+  "built_on": "local-workstation",
+  "base_image": "rosettacommons/foundry:0.2.0-weights",
+  "base_image_note": "Official Rosetta Commons Docker image containing rc-foundry 0.2.0 and base-models model weights.",
+  "docker": "28.1.1",
+  "apptainer": "1.4.3",
+  "gpu": "NVIDIA GeForce RTX 4080 16376 MiB",
+  "driver": "535.309.01",
+  "cuda": "12.2",
+  "disk_avail_gb_at_start": 1400,
+  "weights": {
+    "location": "/weights",
+    "gated": false,
+    "models": {
+      "rf3": {
+        "file": "rf3_foundry_01_24_latest_remapped.ckpt",
+        "size_gb": 2.83,
+        "description": "Latest RF3 checkpoint (trained with data through 01/2024)"
+      },
+      "rfd3": {
+        "file": "rfd3_latest.ckpt",
+        "size_gb": 2.51,
+        "description": "Latest RFdiffusion3 checkpoint"
+      },
+      "rfd3na": {
+        "file": "rfd3na_1190.ckpt",
+        "size_gb": 2.51,
+        "description": "RFdiffusion3NA checkpoint"
+      },
+      "ligandmpnn": {
+        "file": "ligandmpnn_v_32_010_25.pt",
+        "size_mb": 10.5,
+        "description": "LigandMPNN checkpoint"
+      },
+      "proteinmpnn": {
+        "file": "proteinmpnn_v_48_020.pt",
+        "size_mb": 6.7,
+        "description": "ProteinMPNN checkpoint"
+      },
+      "solublempnn": {
+        "file": "solublempnn_v_48_020.pt",
+        "size_mb": 6.7,
+        "description": "SolubleMPNN checkpoint"
+      }
+    }
+  },
+  "build_gotchas": [
+    "Upstream rosettacommons/foundry:0.2.0-weights omitted gcc/build-essential in its runtime stage. Under cuequivariance and triton, rf3 fold calls triton's JIT CudaUtils compiler (driver.c), raising 'RuntimeError: Failed to find C compiler. Please specify via CC environment variable'. Installing build-essential and gcc and setting CC=/usr/bin/gcc resolves this.",
+    "Apptainer runs the filesystem as read-only. Triton, HuggingFace, and Matplotlib attempt to write caches to root/home. All cache directories are redirected to /tmp (TRITON_CACHE_DIR=/tmp/triton, HF_HOME=/tmp/hf, XDG_CACHE_HOME=/tmp/cache, etc.), which Apptainer mounts writable even under --containall.",
+    "Added solublempnn checkpoint so all three MPNN models (ProteinMPNN, LigandMPNN, SolubleMPNN) are available offline."
+  ],
+  "validation": {
+    "method": "apptainer run --nv --containall --net --network=none",
+    "note": "Complete offline execution with isolated environment."
+  }
+}

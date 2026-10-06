@@ -1,0 +1,69 @@
+Bootstrap: docker
+From: nicholasfreitas/esmfold2:docker-26.9.5-UBM
+
+%labels
+    Maintainer Nicholas Freitas
+    Description Biohub ESMFold2 + ESMFold2-Fast with Anthropic UBM patches U1-U6, weights baked in (stored bf16).
+
+%environment
+    # -------- core env vars --------
+    export MAMBA_ROOT_PREFIX=/opt/conda
+    export PATH=/opt/conda/envs/app/bin:$PATH     # envs executables first
+
+    # -------- weights are local and complete --------
+    export ESMFOLD2_MODELS=/app/models
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export ESMCFOLD_CCD_PATH=/app/models/ESMFold2/ccd.pkl
+    export PYTHONPATH=/app
+
+    # -------- keep every cache off the read-only image --------
+    # Torch/Triton/HF all want a writable cache. The image is read-only under
+    # Apptainer, so they are pointed at /tmp, which Apptainer mounts writable
+    # even under --containall.
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+
+    # -------- activate env for all interactive shells --------
+    if [ -n "$PS1" ]; then
+        source /etc/profile.d/mamba.sh
+    fi
+
+%runscript
+    #!/bin/bash
+    if [ $# -eq 0 ]; then
+        bash --login -i
+    else
+        micromamba run -n app "$@"
+    fi
+
+%test
+    # Weights present and pointed at the in-image copy, and UBM patches verified (no GPU needed)
+    /opt/conda/envs/app/bin/python -c "
+import json, os
+m = json.load(open('/app/models/WEIGHTS.json'))['models']
+assert set(m) == {'ESMC-6B', 'ESMFold2', 'ESMFold2-Fast'}, sorted(m)
+for k in ('ESMFold2', 'ESMFold2-Fast'):
+    assert m[k]['esmc_id'] == '/app/models/ESMC-6B', (k, m[k]['esmc_id'])
+assert os.path.exists('/app/models/ESMFold2/ccd.pkl')
+ccd = os.environ.get('ESMCFOLD_CCD_PATH', '')
+assert ccd and os.path.exists(ccd), ('ESMCFOLD_CCD_PATH', ccd)
+
+sp = '/opt/conda/envs/app/lib/python3.12/site-packages'
+common = open(f'{sp}/transformers/models/esmfold2/modeling_esmfold2_common.py').read()
+assert '_swa_sdpa_mask' in common, 'U1 patch missing'
+assert '_sched = [float(v) for v in schedule.tolist()]' in common, 'U2 patch missing'
+model = open(f'{sp}/transformers/models/esmfold2/modeling_esmfold2.py').read()
+assert 'forced one device->host sync per chain id' in model, 'U3 patch missing'
+trimul = open(f'{sp}/transformers/models/esmfold2/kernels/trimul_with_residual.py').read()
+assert '_einsum_row_pitch_aligned' in trimul, 'U4 patch missing'
+bias = open(f'{sp}/transformers/models/esmfold2/kernels/fused_attention_pair_bias.py').read()
+assert 'pid_b.to(tl.int64)' in bias, 'U5 patch missing'
+msa = open(f'{sp}/esm/models/esmfold2/paired_msa.py').read()
+assert '_INSERTION_BYTES' in msa, 'U6 patch missing'
+
+print('weights and UBM patches U1-U6 OK', {k: round(v['stored_bytes']/1e9, 2) for k, v in m.items()})
+"

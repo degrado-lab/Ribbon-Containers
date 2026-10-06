@@ -1,0 +1,63 @@
+{
+  "container": {
+    "docker_tag": "nicholasfreitas/foundry:docker-0.2.0",
+    "docker_size": "24.2 GB",
+    "sif": "foundry_0.2.0.sif",
+    "sif_bytes": 11600650240,
+    "sif_sha256": "66b7b7e27ddb325af37f2570e986803fef87015a8622c9b01ed7c0c53bc81d8b",
+    "apptainer_version": "1.4.3",
+    "built_from": "docker-archive / docker-daemon (local image; shipped definition.def uses Bootstrap: docker)",
+    "build_date": "Wednesday_30_September_2026_16:56:00_PDT"
+  },
+  "host": {
+    "gpu": "NVIDIA GeForce RTX 4080",
+    "vram_mib": 16376,
+    "driver": "535.309.01",
+    "cuda": "12.2"
+  },
+  "isolation": {
+    "method": "apptainer run --nv --containall --net --network=none",
+    "meaning": "no route to external hubs; all inferences run strictly on baked model weights"
+  },
+  "models_tested": {
+    "rf3": {
+      "command": "rf3 fold inputs=test/5vht_single.json out_dir=test_output",
+      "target": "5vht_single (100 aa)",
+      "checkpoint": "/weights/rf3_foundry_01_24_latest_remapped.ckpt",
+      "runtime_seconds": 23.5,
+      "outputs_generated": [
+        "5vht_single_model.cif",
+        "5vht_single_confidences.json",
+        "5vht_single_ranking_scores.csv",
+        "5vht_single_summary_confidences.json"
+      ],
+      "metrics": {
+        "overall_plddt": 0.7003,
+        "chain_ptm": 0.70,
+        "has_clash": false
+      },
+      "status": "PASS"
+    },
+    "protein_mpnn": {
+      "command": "mpnn --model_type protein_mpnn --checkpoint_path /weights/proteinmpnn_v_48_020.pt --is_legacy_weights True --structure_path test_output/5vht_single/5vht_single_model.cif --out_directory test_output/mpnn_out",
+      "checkpoint": "/weights/proteinmpnn_v_48_020.pt",
+      "runtime_seconds": 3.2,
+      "outputs_generated": [
+        "5vht_single_model.fa",
+        "5vht_single_model_b0_d0.cif"
+      ],
+      "metrics": {
+        "sequence_recovery": 0.2245
+      },
+      "status": "PASS"
+    }
+  },
+  "all_baked_weights": [
+    { "path": "/weights/rf3_foundry_01_24_latest_remapped.ckpt", "size_bytes": 3038876446, "model": "rf3" },
+    { "path": "/weights/rfd3_latest.ckpt", "size_bytes": 2690316669, "model": "rfd3" },
+    { "path": "/weights/rfd3na_1190.ckpt", "size_bytes": 2690139762, "model": "rfd3na" },
+    { "path": "/weights/proteinmpnn_v_48_020.pt", "size_bytes": 6681301, "model": "protein_mpnn" },
+    { "path": "/weights/ligandmpnn_v_32_010_25.pt", "size_bytes": 10541943, "model": "ligand_mpnn" },
+    { "path": "/weights/solublempnn_v_48_020.pt", "size_bytes": 6681301, "model": "soluble_mpnn" }
+  ]
+}

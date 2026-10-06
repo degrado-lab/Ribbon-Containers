@@ -1,0 +1,95 @@
+{
+ "container": "ESMFold2",
+ "version": "26.9.5-UBM",
+ "built_on": "local host (freitas)",
+ "base_image": "nicholasfreitas/cuda_micromamba_base:cuda12.2.0-base-ubuntu22.04-micromamba",
+ "builder_image": "nicholasfreitas/esmfold2:docker-26.9.5-fa2.8.3",
+ "docker": "28.1.1",
+ "apptainer": "1.4.3",
+ "gpu": "NVIDIA GeForce RTX 4080 16376 MiB",
+ "driver": "535.309.01",
+ "cuda_driver": "12.2",
+ "disk_avail_gb_at_start": 1300,
+ "artifacts": {
+  "docker_image": "nicholasfreitas/esmfold2:docker-26.9.5-UBM",
+  "docker_image_id": "8d8edd015ce6",
+  "sif_file": "esmfold2_26.9.5-UBM.sif",
+  "sif_bytes": 14851215360,
+  "sif_sha256": "ad02b0d29007e1c088ccdd2c0d170cbce9fa57b32fd6529c8fb5d2c7ddfa7fed"
+ },
+ "pins": {
+  "python": "3.12",
+  "torch": "2.7.1+cu126",
+  "flash_attn": "2.8.3.post1",
+  "esm": "26b0bc2b771e3e419ea74f445a5f35cc094a1509",
+  "transformers": "ef32577f55da19a4989cd7b22e004dc43a4998cb",
+  "biotite": "1.7.1",
+  "rdkit": "2026.3.6",
+  "huggingface_hub": "latest",
+  "safetensors": "latest"
+ },
+ "ubm_patches": {
+  "source_repository": "https://github.com/anthropics/uplifting-biomolecular-modeling",
+  "patches": [
+   {
+    "id": "U1",
+    "name": "U1_swa_sdpa_mask_memoize",
+    "target": "transformers/models/esmfold2/modeling_esmfold2_common.py",
+    "description": "Memoize the SDPA sliding-window mask in SWA3DRoPEAttention (eliminates mask recomputation per block and diffusion step)"
+   },
+   {
+    "id": "U2",
+    "name": "U2_sampler_schedule_host_syncs",
+    "target": "transformers/models/esmfold2/modeling_esmfold2_common.py",
+    "description": "Remove per-step host syncs from EDM sampler schedule (converts schedule/gammas to floats once instead of 3 item() syncs/step)"
+   },
+   {
+    "id": "U3",
+    "name": "U3_confidence_chain_pair_host_syncs",
+    "target": "transformers/models/esmfold2/modeling_esmfold2.py",
+    "description": "Drop redundant per-chain host sync in ConfidenceHead pair_chains_iptm"
+   },
+   {
+    "id": "U4",
+    "name": "U4_trimul_stage3_row_pitch_alignment",
+    "target": "transformers/models/esmfold2/kernels/trimul_with_residual.py",
+    "description": "Stage-3 einsum operand alignment to multiple of 8 for fast cuBLAS kernel on non-multiple-of-8 token lengths"
+   },
+   {
+    "id": "U5",
+    "name": "U5_pair_bias_int64_offsets",
+    "target": "transformers/models/esmfold2/kernels/fused_attention_pair_bias.py",
+    "description": "64-bit row offsets in fused pair-bias kernel (prevents negative offset wrapping / out of bounds access on long sequences)"
+   },
+   {
+    "id": "U6",
+    "name": "U6_msa_features_vectorised",
+    "target": "esm/models/esmfold2/paired_msa.py",
+    "description": "Vectorise msa_to_res_type_and_deletions over whole byte buffer instead of per-character Python loop"
+   }
+  ]
+ },
+ "weights": {
+  "esmc": "biohub/ESMC-6B",
+  "esmfold2": "biohub/ESMFold2",
+  "esmfold2_fast": "biohub/ESMFold2-Fast",
+  "gated": false,
+  "stored_dtype": "bfloat16"
+ },
+ "test_targets": {
+  "1UBQ": {
+   "len": 76
+  },
+  "1STP": {
+   "len": 159
+  }
+ },
+ "validation": {
+  "method": "apptainer run --nv --containall --net --network=none",
+  "note": "no host $HOME, no host /tmp, no route to the Hub — a fold can only use baked weights",
+  "targets": [
+   "1UBQ (76 aa, apo)",
+   "1STP (159 aa, biotin via CCD BTN)"
+  ]
+ }
+}

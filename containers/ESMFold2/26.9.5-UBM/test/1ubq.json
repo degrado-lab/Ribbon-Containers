@@ -1,0 +1,10 @@
+{
+ "name": "1ubq",
+ "note": "Ubiquitin (PDB 1UBQ), 76 aa, apo. Fast smoke test.",
+ "protein": {
+  "id": "A",
+  "sequence": "MQIFVKTLTGKTITLEVEPSDTIENVKAKIQDKEGIPPDQQRLIFAGKQLEDGRTLSDYNIQKESTLHLVLRLRGG"
+ },
+ "ligand": null,
+ "seed": 0
+}

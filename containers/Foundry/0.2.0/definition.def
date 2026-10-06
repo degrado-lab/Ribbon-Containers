@@ -1,0 +1,50 @@
+Bootstrap: docker
+From: nicholasfreitas/foundry:docker-0.2.0
+
+%labels
+    Maintainer Nicholas Freitas
+    Description Foundry 0.2.0 (RFD3, RF3, ProteinMPNN/LigandMPNN/SolubleMPNN) with baked model weights
+
+%environment
+    export PATH=/app/foundry/.venv/bin:$PATH
+    export FOUNDRY_CHECKPOINT_DIRS=/weights
+    export WEIGHTS=/weights
+    export CC=/usr/bin/gcc
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+
+%runscript
+    #!/bin/bash
+    if [ $# -eq 0 ]; then
+        exec bash --login -i
+    else
+        exec "$@"
+    fi
+
+%test
+    /app/foundry/.venv/bin/python -c "
+import os
+checkpoints = [
+    '/weights/ligandmpnn_v_32_010_25.pt',
+    '/weights/proteinmpnn_v_48_020.pt',
+    '/weights/solublempnn_v_48_020.pt',
+    '/weights/rf3_foundry_01_24_latest_remapped.ckpt',
+    '/weights/rfd3_latest.ckpt',
+    '/weights/rfd3na_1190.ckpt',
+]
+for cp in checkpoints:
+    assert os.path.isfile(cp), f'Missing checkpoint: {cp}'
+    assert os.path.getsize(cp) > 1000000, f'Checkpoint file empty or corrupted: {cp}'
+print('All 6 model checkpoints verified in /weights!')
+"
+    which gcc
+    which rf3
+    which rfd3
+    which rfd3na
+    which mpnn
+    which foundry

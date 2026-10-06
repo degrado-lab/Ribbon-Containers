@@ -1,0 +1,77 @@
+Bootstrap: docker
+From: nicholasfreitas/foundry:docker-0.2.0-UBM-RDF3
+
+%labels
+    Maintainer Nicholas Freitas
+    Description Foundry 0.2.0-UBM-RDF3 with Anthropic UBM acceleration for RFdiffusion3 and baked weights
+
+%environment
+    export PATH=/app/foundry/.venv/bin:$PATH
+    export FOUNDRY_CHECKPOINT_DIRS=/weights
+    export WEIGHTS=/weights
+    export MODEL_OPT=/app/rfdiffusion3
+    export RFDIFFUSION3_OPT=fast
+    export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True"
+    export CC=/usr/bin/gcc
+    export HF_HUB_OFFLINE=1
+    export TRANSFORMERS_OFFLINE=1
+    export HF_HOME=/tmp/hf
+    export XDG_CACHE_HOME=/tmp/cache
+    export TRITON_CACHE_DIR=/tmp/triton
+    export TORCHINDUCTOR_CACHE_DIR=/tmp/inductor
+    export MPLCONFIGDIR=/tmp/mpl
+
+%runscript
+    #!/bin/bash
+    if [ $# -eq 0 ]; then
+        exec bash --login -i
+    else
+        exec "$@"
+    fi
+
+%test
+    /app/foundry/.venv/bin/python -c "
+import os
+checkpoints = [
+    '/weights/ligandmpnn_v_32_010_25.pt',
+    '/weights/proteinmpnn_v_48_020.pt',
+    '/weights/solublempnn_v_48_020.pt',
+    '/weights/rf3_foundry_01_24_latest_remapped.ckpt',
+    '/weights/rfd3_latest.ckpt',
+    '/weights/rfd3na_1190.ckpt',
+]
+for cp in checkpoints:
+    assert os.path.isfile(cp), f'Missing checkpoint: {cp}'
+    assert os.path.getsize(cp) > 1000000, f'Checkpoint file empty or corrupted: {cp}'
+print('All 6 model checkpoints verified in /weights!')
+
+import opt_core
+import rfdiffusion3_opt
+print('opt_core and rfdiffusion3_opt successfully imported!')
+
+# Verify patched overlay files
+sp = '/app/foundry/.venv/lib/python3.12/site-packages/rfd3/model'
+expected_files = [
+    'cudagraph_sampler.py',
+    'hoist.py',
+    'inference_sampler.py',
+    'RFD3_diffusion_module.py',
+    'layers/attention.py',
+    'layers/block_utils.py',
+    'layers/blocks.py',
+    'layers/encoders.py',
+    'layers/layer_utils.py',
+    'layers/pairformer_layers.py',
+]
+for f in expected_files:
+    p = os.path.join(sp, f)
+    assert os.path.isfile(p), f'Missing patched file: {p}'
+print('All 10 UBM RFD3 overlay files verified in site-packages!')
+"
+    which gcc
+    which rf3
+    which rfd3
+    which rfd3na
+    which mpnn
+    which foundry
+    which rfdiffusion3-opt

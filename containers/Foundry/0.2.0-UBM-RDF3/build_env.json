@@ -1,0 +1,86 @@
+{
+  "container": "Foundry",
+  "version": "0.2.0-UBM-RDF3",
+  "built_on": "local-workstation",
+  "base_image": "nicholasfreitas/foundry:docker-0.2.0",
+  "base_image_note": "Foundry 0.2.0 with all 6 model checkpoints baked into /weights, gcc/build-essential, and solublempnn.",
+  "docker": "28.1.1",
+  "apptainer": "1.4.3",
+  "gpu": "NVIDIA GeForce RTX 4080 16376 MiB",
+  "driver": "535.309.01",
+  "cuda": "12.2",
+  "disk_avail_gb_at_start": 1300,
+  "acceleration": {
+    "provider": "Anthropic Uplifting Biomolecular Modeling (UBM)",
+    "repository": "https://github.com/anthropics/uplifting-biomolecular-modeling",
+    "target_model": "RFdiffusion3 (RFD3)",
+    "packages": {
+      "opt_core": "0.5.228.0 (pure Python + Triton fused kernels)",
+      "rfdiffusion3_opt": "0.6.2 (overlay driver & autoload hook)"
+    },
+    "overlay_files": [
+      "rfd3/model/cudagraph_sampler.py",
+      "rfd3/model/hoist.py",
+      "rfd3/model/inference_sampler.py",
+      "rfd3/model/RFD3_diffusion_module.py",
+      "rfd3/model/layers/attention.py",
+      "rfd3/model/layers/block_utils.py",
+      "rfd3/model/layers/blocks.py",
+      "rfd3/model/layers/encoders.py",
+      "rfd3/model/layers/layer_utils.py",
+      "rfd3/model/layers/pairformer_layers.py"
+    ],
+    "modes_supported": [
+      "fast (default): RFD3_HOIST + RFD3_FZT + RFD3_CUDAGRAPH + RFD3_INIT_CHUNK + RFD3_COMPILE + RFD3_TOKEN_SDPA + RFD3_GATHER_ATTN",
+      "exact: RFD3_HOIST + RFD3_FZT + RFD3_CUDAGRAPH + RFD3_INIT_CHUNK (bit-identical designs to stock)",
+      "off: stock upstream logic without optimization levers"
+    ]
+  },
+  "weights": {
+    "location": "/weights",
+    "gated": false,
+    "models": {
+      "rf3": {
+        "file": "rf3_foundry_01_24_latest_remapped.ckpt",
+        "size_gb": 2.83,
+        "description": "Latest RF3 checkpoint (trained with data through 01/2024)"
+      },
+      "rfd3": {
+        "file": "rfd3_latest.ckpt",
+        "size_gb": 2.51,
+        "description": "Latest RFdiffusion3 checkpoint"
+      },
+      "rfd3na": {
+        "file": "rfd3na_1190.ckpt",
+        "size_gb": 2.51,
+        "description": "RFdiffusion3NA checkpoint"
+      },
+      "ligandmpnn": {
+        "file": "ligandmpnn_v_32_010_25.pt",
+        "size_mb": 10.5,
+        "description": "LigandMPNN checkpoint"
+      },
+      "proteinmpnn": {
+        "file": "proteinmpnn_v_48_020.pt",
+        "size_mb": 6.7,
+        "description": "ProteinMPNN checkpoint"
+      },
+      "solublempnn": {
+        "file": "solublempnn_v_48_020.pt",
+        "size_mb": 6.7,
+        "description": "SolubleMPNN checkpoint"
+      }
+    }
+  },
+  "build_gotchas": [
+    "Installed opt_core wheel (14.6 MB) and editable rfdiffusion3 framework into /app/rfdiffusion3 with MODEL_OPT=/app/rfdiffusion3.",
+    "Upstream Foundry 0.2.0 uses PyTorch's native nn.RMSNorm rather than apex. FusedRMSNorm; patched routes.py to allow dynamic rmsnorm expectation based on apex availability.",
+    "Added _COMPILE_TARGETS = ('encoder', 'diffusion_token_encoder', 'diffusion_transformer', 'decoder') to rfd3.engine.RFD3InferenceEngine to enable torch.compile in fast mode.",
+    "Applied the 10-file overlay via install.sh apply --force, writing the .xattempt_addon_overlay.json marker.",
+    "Apptainer builds must use -mem 512M -processors 2 on this host to avoid squashfs memory exhaustion."
+  ],
+  "validation": {
+    "method": "apptainer run --nv --containall --net --network=none",
+    "note": "Fully isolated offline validation across RFD3 fast mode, RFD3 exact mode, RF3 structure prediction, and ProteinMPNN sequence design."
+  }
+}
